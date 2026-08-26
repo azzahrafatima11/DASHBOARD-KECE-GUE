@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Analisis Kualitas AMDK 600 ML — PT Makmur Bersama Sahabat</title>
+    <meta name="description"
+        content="Dashboard analisis kualitas produksi AMDK 600 ML tahun 2025: data produksi, cacat, COPQ, dan usulan perbaikan.">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        /* ============================================================
+           DESIGN TOKENS
+           ============================================================ */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-card-hover: #ffffff;
+            --bg-surface: #f1f5f9;
+            --bg-glass: rgba(255, 255, 255, 0.95);
+
+            --accent-blue: #0f172a; /* Slate 900 */
+            --accent-blue-light: #334155; /* Slate 700 */
+            --accent-blue-dim: rgba(15, 23, 42, 0.05);
+            --accent-cyan: #334155; /* Slate 700 (Replaced Cyan) */
+            --accent-cyan-light: #475569; /* Slate 600 */
+            --accent-cyan-dim: rgba(51, 65, 85, 0.05);
+            --accent-emerald: #059669; /* Emerald 600 */
+            --accent-emerald-light: #10b981; /* Emerald 500 */
+            --accent-emerald-dim: rgba(5, 150, 105, 0.1);
+            --accent-purple: #475569; /* Slate 600 (Replaced Purple) */
+            --accent-purple-light: #64748b; /* Slate 500 */
+            --accent-purple-dim: rgba(71, 85, 105, 0.05);
+            --accent-rose: #b91c1c; /* Red 700 (Priority 1) */
+            --accent-rose-light: #ef4444; /* Red 500 */
+            --accent-rose-dim: rgba(220, 38, 38, 0.1);
+            --accent-amber: #d97706; /* Amber 600 (Priority 2) */
+            --accent-amber-light: #f59e0b; /* Amber 500 */
+            --accent-amber-dim: rgba(217, 119, 6, 0.1);
+            --accent-orange: #ea580c;
+
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --text-accent: #2563eb;
+
+            --border-subtle: #e2e8f0;
+            --border-light: #cbd5e1;
+
+            --shadow-glow-blue: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-glow-cyan: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-2xl: 24px;
+        }
+
+        /* ============================================================
+           RESET & BASE
+           ============================================================ */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           LAYOUT
+           ============================================================ */
+        .dashboard-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .dash-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px 30px;
+            position: relative;
+        }
+
+        .dash-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 2px;
+        }
+
+        .dash-header .company-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: var(--accent-blue-dim);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent-blue-light);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .dash-header .company-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.5);
+            }
+        }
+
+        .dash-header h1 {
+            font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+
+        .dash-header .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .dash-header .period-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+            padding: 4px 12px;
+            background: var(--accent-cyan-dim);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent-cyan-light);
+        }
+
+        /* ============================================================
+           SECTION TITLES
+           ============================================================ */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            margin-top: 48px;
+        }
+
+        .section-header .section-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .section-header .section-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .section-header h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .section-header .section-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        /* ============================================================
+           STAT CARDS
+           ============================================================ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            border-radius: 2px 2px 0 0;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-light);
+        }
+
+        .stat-card.blue::before {
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+        }
+
+        .stat-card.rose::before {
+            background: linear-gradient(90deg, var(--accent-rose), var(--accent-orange));
+        }
+
+        .stat-card.amber::before {
+            background: linear-gradient(90deg, var(--accent-amber), var(--accent-orange));
+        }
+
+        .stat-card.emerald::before {
+            background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan));
+        }
+
+        .stat-card.purple::before {
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+        }
+
+        .stat-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon-box svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .stat-card.blue .stat-icon-box {
+            background: var(--accent-blue-dim);
+            color: var(--accent-blue-light);
+        }
+
+        .stat-card.rose .stat-icon-box {
+            background: var(--accent-rose-dim);
+            color: var(--accent-rose-light);
+        }
+
+        .stat-card.amber .stat-icon-box {
+            background: var(--accent-amber-dim);
+            color: var(--accent-amber-light);
+        }
+
+        .stat-card.emerald .stat-icon-box {
+            background: var(--accent-emerald-dim);
+            color: var(--accent-emerald-light);
+        }
+
+        .stat-card.purple .stat-icon-box {
+            background: var(--accent-purple-dim);
+            color: var(--accent-purple-light);
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .stat-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* ============================================================
+           CHART CARDS
+           ============================================================ */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-card:hover {
+            border-color: var(--border-light);
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .chart-card-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .chart-card-header .chart-badge {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-weight: 600;
+        }
+
+        .chart-canvas-wrap {
+            position: relative;
+            width: 100%;
+        }
+
+        .chart-canvas-wrap canvas {
+            width: 100% !important;
+        }
+
+        /* ============================================================
+           PRIORITY TABLE
+           ============================================================ */
+        .priority-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 900px) {
+            .priority-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .priority-card {
+            background: var(--bg-card);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .priority-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-light);
+        }
+
+        .priority-card .priority-rank {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-size: 2.5rem;
+            font-weight: 900;
+            opacity: 0.06;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .priority-card .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .priority-card:nth-child(1) .priority-badge {
+            background: var(--accent-rose-dim);
+            color: var(--accent-rose-light);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+        }
+
+        .priority-card:nth-child(2) .priority-badge {
+            background: var(--accent-amber-dim);
+            color: var(--accent-amber-light);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .priority-card:nth-child(3) .priority-badge {
+            background: var(--accent-purple-dim);
+            color: var(--accent-purple-light);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .priority-card h4 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .priority-card .priority-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .priority-card .priority-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .priority-card .priority-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .priority-card .priority-stat-val {
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .priority-card .priority-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* ============================================================
+           COPQ COMPARISON
+           ============================================================ */
+        .copq-comparison {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .copq-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .copq-box {
+            background: var(--bg-card);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .copq-box .copq-year {
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .copq-box .copq-amount {
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .copq-box .copq-detail {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .copq-box.before {
+            border-color: rgba(244, 63, 94, 0.2);
+        }
+
+        .copq-box.before .copq-year {
+            color: var(--accent-rose-light);
+        }
+
+        .copq-box.before .copq-amount {
+            color: var(--accent-rose-light);
+        }
+
+        .copq-box.after {
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .copq-box.after .copq-year {
+            color: var(--accent-emerald-light);
+        }
+
+        .copq-box.after .copq-amount {
+            color: var(--accent-emerald-light);
+        }
+
+        .copq-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copq-arrow .arrow-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--accent-emerald-dim);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: arrowPulse 2s ease-in-out infinite;
+        }
+
+        .copq-arrow .arrow-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--accent-emerald-light);
+        }
+
+        .copq-arrow .savings {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-emerald-light);
+            text-align: center;
+        }
+
+        @keyframes arrowPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.08);
+            }
+        }
+
+        /* ============================================================
+           USULAN CARDS
+           ============================================================ */
+        .usulan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        .usulan-card {
+            background: var(--bg-card);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .usulan-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-light);
+            box-shadow: var(--shadow-glow-blue);
+        }
+
+        .usulan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+        }
+
+        .usulan-card:nth-child(1)::before {
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+        }
+
+        .usulan-card:nth-child(2)::before {
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+        }
+
+        .usulan-card:nth-child(3)::before {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .usulan-card:nth-child(4)::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .usulan-card:nth-child(5)::before {
+            background: linear-gradient(90deg, #f43f5e, #fb7185);
+        }
+
+        .usulan-num {
+            font-size: 2.5rem;
+            font-weight: 900;
+            opacity: 0.05;
+            font-family: 'JetBrains Mono', monospace;
+            position: absolute;
+            top: 8px;
+            right: 16px;
+        }
+
+        .usulan-card .usulan-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            font-size: 1.1rem;
+        }
+
+        .usulan-card h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .usulan-card p {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .usulan-card .target-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            margin-top: 12px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-emerald-light);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+        }
+
+        /* ============================================================
+           FOOTER
+           ============================================================ */
+        .dash-footer {
+            text-align: center;
+            padding: 40px 20px 24px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .dash-footer .footer-line {
+            width: 60px;
+            height: 2px;
+            background: var(--border-light);
+            border-radius: 1px;
+            margin: 0 auto 12px;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 1.3rem;
+            }
+
+            .copq-box .copq-amount {
+                font-size: 1.4rem;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ============================================================
+           ANIMATIONS
+           ============================================================ */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.4s;
+        }
+
+        .delay-5 {
+            animation-delay: 0.5s;
+        }
+
+        /* ============================================================
+           COPQ DETAIL TABLE
+           ============================================================ */
+        .copq-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .copq-detail-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .copq-detail-card:hover {
+            border-color: var(--border-light);
+        }
+
+        .copq-detail-card .cdl {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .copq-detail-card .cdv {
+            font-size: 1.15rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .copq-detail-card .cdp {
+            font-size: 0.75rem;
+            margin-top: 6px;
+        }
+
+        /* ============================================================
+           MONTHLY BAR DATA
+           ============================================================ */
+        .monthly-data-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 6px;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 900px) {
+            .monthly-data-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        @media (max-width: 500px) {
+            .monthly-data-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .month-mini {
+            background: var(--bg-surface);
+            border-radius: var(--radius-sm);
+            padding: 8px 4px;
+            text-align: center;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .month-mini .mm-month {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .month-mini .mm-val {
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 2px;
+        }
+
+        .month-mini .mm-pct {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        /* Sigma Card */
+        .sigma-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 20px;
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(6, 182, 212, 0.08));
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: var(--radius-xl);
+        }
+
+        .sigma-value {
+            font-size: 3.5rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-blue);
+            line-height: 1;
+        }
+
+        .sigma-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sigma-info .si-label {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .sigma-info .si-sub {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        .sigma-info .si-dpmo {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+
+        <!-- ===== HEADER ===== -->
+        <header class="dash-header animate-in">
+            <div class="company-badge">
+                <span class="dot"></span>
+                PT Makmur Bersama Sahabat
+            </div>
+            <h1>Dashboard Analisis Kualitas Produksi</h1>
+            <p class="subtitle">AMDK 600 ML — Ringkasan Data Produksi, Cacat, dan Biaya Kualitas</p>
+            <div class="period-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                Periode: Januari — Desember 2025
+            </div>
+        </header>
+
+        <!-- ===== OVERVIEW STATS ===== -->
+        <div class="stats-grid animate-in delay-1">
+            <div class="stat-card blue">
+                <div class="stat-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value">6.148.560</span>
+                    <span class="stat-label">Total Produksi (Botol)</span>
+                    <span class="stat-sub">241.727 dus × 24 botol</span>
+                </div>
+            </div>
+            <div class="stat-card rose">
+                <div class="stat-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value">132.756</span>
+                    <span class="stat-label">Total Produk Cacat</span>
+                    <span class="stat-sub">5 jenis cacat teridentifikasi</span>
+                </div>
+            </div>
+            <div class="stat-card amber">
+                <div class="stat-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value">2,40%</span>
+                    <span class="stat-label">Rata-Rata Cacat</span>
+                    <span class="stat-sub">Proporsi cacat thd total produksi</span>
+                </div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                        <polyline points="17 6 23 6 23 12" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value">4,12σ</span>
+                    <span class="stat-label">Level Sigma</span>
+                    <span class="stat-sub">DPMO: 4.754</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sigma Display -->
+        <div class="sigma-display animate-in delay-2">
+            <div class="sigma-value">4.12σ</div>
+            <div class="sigma-info">
+                <span class="si-label">Level Sigma Proses Produksi</span>
+                <span class="si-sub">Berdasarkan 5 CTQ (Critical to Quality) dengan 6.148.560 unit produksi</span>
+                <span class="si-dpmo">DPMO Rata-rata: 4.753,72 | CTQ: 5 Jenis Cacat</span>
+            </div>
+        </div>
+
+
+
+        <!-- ===== CHARTS ROW 1: Production Bar + Defect Pie ===== -->
+        <div class="section-header animate-in delay-2">
+            <div class="section-icon" style="background: var(--accent-cyan-dim); color: var(--accent-cyan-light);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+            </div>
+            <h2>Analisis Produksi & Jenis Cacat</h2>
+        </div>
+        <div class="charts-grid animate-in delay-3">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3>Tren Produksi vs Cacat per Bulan</h3>
+                    <span class="chart-badge"
+                        style="background: var(--accent-blue-dim); color: var(--accent-blue-light);">2025</span>
+                </div>
+                <div class="chart-canvas-wrap">
+                    <canvas id="chartProdVsDefect" height="280"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3>Komposisi 5 Jenis Cacat</h3>
+                    <span class="chart-badge"
+                        style="background: var(--accent-purple-dim); color: var(--accent-purple-light);">Persentase</span>
+                </div>
+                <div class="chart-canvas-wrap">
+                    <canvas id="chartDefectPie" height="280"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== CHARTS ROW 2: Defect Breakdown Bar + Rate Line ===== -->
+        <div class="charts-grid animate-in delay-3" style="margin-top: 20px;">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3>Jumlah per Jenis Cacat (Pareto)</h3>
+                    <span class="chart-badge"
+                        style="background: var(--accent-rose-dim); color: var(--accent-rose-light);">Frekuensi</span>
+                </div>
+                <div class="chart-canvas-wrap">
+                    <canvas id="chartParetoBar" height="280"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3>Tren Persentase Cacat Bulanan</h3>
+                    <span class="chart-badge"
+                        style="background: var(--accent-amber-dim); color: var(--accent-amber-light);">% Cacat</span>
+                </div>
+                <div class="chart-canvas-wrap">
+                    <canvas id="chartDefectRate" height="280"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 3 CACAT PRIORITAS ===== -->
+        <div class="section-header animate-in delay-2">
+            <div class="section-icon" style="background: var(--accent-rose-dim); color: var(--accent-rose-light);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+            </div>
+            <h2>3 Cacat Prioritas Teratas</h2>
+        </div>
+        <div class="priority-grid animate-in delay-3">
+            <div class="priority-card">
+                <div class="priority-rank">#1</div>
+                <div class="priority-badge">🔴 Prioritas 1</div>
+                <h4>Cacat Penyot</h4>
+                <p class="priority-desc">Botol preform ukuran tidak seragam dari supplier & getaran mesin berat
+                    mengganggu presisi pengepresan.</p>
+                <div class="priority-stats">
+                    <div class="priority-stat">
+                        <span class="priority-stat-val" style="color: var(--accent-rose-light);">34.107</span>
+                        <span class="priority-stat-label">Total Cacat</span>
+                    </div>
+                    <div class="priority-stat">
+                        <span class="priority-stat-val" style="color: var(--accent-rose-light);">25,69%</span>
+                        <span class="priority-stat-label">Proporsi</span>
+                    </div>
+                    <div class="priority-stat">
+                        <span class="priority-stat-val" style="color: var(--accent-rose-light);">189,8</span>
+                        <span class="priority-stat-label">RPN Maks</span>
+                    </div>
+                </div>
+            </div>
+            <div class="priority-card">
+                <div class="priority-rank">#2</div>
+                <div class="priority-badge">🟡 Prioritas 2</div>
+                <h4>Cacat Leher Botol</h4>
+                <p class="priority-desc">Operator salah setting suhu pemanasan preform, preform mengandung kontaminan,
+                    dan ketebalan dinding tidak seragam.</p>
+                <div class="priority-stats">
+                    <div class="priority-stat">
+                        <span class="priority-stat-val" style="color: var(--accent-amber-light);">31.026</span>
+                        <span class="priority-stat-label">Total Cacat</span>
+                    </div>
+                    <div class="priority-stat">
+                        <span class="priority-stat-val" style="color: var(--accent-amber-light);">23,37%</span>
+                        <span class="priority-stat-label">Proporsi</span>
+                    </div>
+                    <div class="priority-stat">
+                        <span class="priority-stat-val" style="color: var(--accent-amber-light);">168,7</span>
+                        <span class="priority-stat-label">RPN Maks</span>
+                    </div>
+                </div>
+            </div>
+            <div class="priority-card">
+                <div class="priority-rank">#3</div>
+                <div class="priority-badge">🟣 Prioritas 3</div>
+                <h4>Kebocoran</h4>
+                <p class="priority-desc">Kualitas tutup botol cacat dari supplier, pelaksanaan pembersihan mesin
+                    capping tidak rutin, dan tutup botol tidak presisi.</p>
+                <div class="priority-stats">
+                    <div class="priority-stat">
+                        <span class="priority-stat-val" style="color: var(--accent-purple-light);">24.851</span>
+                        <span class="priority-stat-label">Total Cacat</span>
+                    </div>
+                    <div class="priority-stat">
+                        <span class="priority-stat-val" style="color: var(--accent-purple-light);">18,72%</span>
+                        <span class="priority-stat-label">Proporsi</span>
+                    </div>
+                    <div class="priority-stat">
+                        <span class="priority-stat-val" style="color: var(--accent-purple-light);">115,7</span>
+                        <span class="priority-stat-label">RPN Maks</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== COPQ SECTION ===== -->
+        <div class="section-header animate-in delay-2">
+            <div class="section-icon" style="background: var(--accent-emerald-dim); color: var(--accent-emerald-light);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                </svg>
+            </div>
+            <h2>Cost of Poor Quality (COPQ) — 3 Cacat Prioritas</h2>
+        </div>
+
+        <p class="animate-in delay-2" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; text-align: center; background: var(--bg-surface); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            💡 <strong>Catatan:</strong> Nilai COPQ didapat dari Total Cacat dikali HPP (Rp 708,33).
+        </p>
+
+        <!-- COPQ Detail Chart -->
+        <div class="charts-grid animate-in delay-3">
+            <div class="chart-card full-width">
+                <div class="chart-card-header">
+                    <h3>Proporsi COPQ 3 Cacat Prioritas (Total: Rp 63,7 Juta)</h3>
+                    <span class="chart-badge"
+                        style="background: var(--accent-emerald-dim); color: var(--accent-emerald-light);">2025</span>
+                </div>
+                <div class="chart-canvas-wrap" style="max-width: 400px; margin: 0 auto;">
+                    <canvas id="chartCOPQPriorityPie" height="280"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- COPQ Comparison 2025 vs 2026 -->
+        <div class="copq-comparison animate-in delay-4" style="margin-top: 24px;">
+            <div class="copq-box before">
+                <div class="copq-year">COPQ 3 Cacat Prioritas — 2025</div>
+                <div class="copq-amount">Rp 63,7 Jt</div>
+                <div class="copq-detail">Total kerugian 3 cacat prioritas<br>(Penyot + Leher Botol + Kebocoran)</div>
+            </div>
+            <div class="copq-arrow">
+                <div class="arrow-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </div>
+                <div class="savings">
+                    Estimasi Penghematan<br>
+                    <strong style="font-size: 1.3rem;">Rp 19,3 Jt</strong><br>
+                    <span style="font-size: 0.85rem; opacity: 0.8;">Penurunan Cacat Signifikan</span>
+                </div>
+            </div>
+            <div class="copq-box after">
+                <div class="copq-year">Estimasi COPQ — 2026 (Setelah Perbaikan)</div>
+                <div class="copq-amount">Rp 44,4 Jt</div>
+                <div class="copq-detail">Setelah penerapan usulan perbaikan<br>Target sesuai analisis perusahaan</div>
+            </div>
+        </div>
+
+        <!-- COPQ Chart -->
+        <div class="charts-grid animate-in delay-4" style="margin-top: 20px;">
+            <div class="chart-card full-width">
+                <div class="chart-card-header">
+                    <h3>Total COPQ 3 Cacat Prioritas (2025 vs Estimasi 2026)</h3>
+                    <span class="chart-badge"
+                        style="background: var(--accent-emerald-dim); color: var(--accent-emerald); border: 1px solid var(--accent-emerald-dim);">Target 2026</span>
+                </div>
+                <div class="chart-canvas-wrap" style="max-width: 600px; margin: 0 auto;">
+                    <canvas id="chartTotalCOPQ" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="dash-footer">
+            <div class="footer-line"></div>
+            <p><strong>Dashboard Analisis Kualitas AMDK 600 ML</strong></p>
+            <p>PT Makmur Bersama Sahabat — Tugas Akhir 2025</p>
+            <p style="margin-top: 4px;">Fatimah Az Zahra · 2210932039</p>
+        </footer>
+
+    </div>
+
+    <!-- ===== CHART.JS SCRIPTS ===== -->
+    <script>
+        // ============================================================
+        // CHART.JS GLOBAL CONFIG
+        // ============================================================
+        Chart.defaults.color = '#475569';
+        Chart.defaults.borderColor = 'rgba(148, 163, 184, 0.2)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.register(ChartDataLabels);
+
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        const produksi = [566256, 695520, 87120, 66312, 814200, 273000, 654792, 644808, 611016, 505704, 266520, 963312];
+        const cacat = [17476, 14022, 3436, 2012, 18521, 10097, 14991, 15644, 14023, 7120, 1658, 13756];
+        const pctCacat = cacat.map((c, i) => ((c / produksi[i]) * 100));
+
+        // COPQ per month (600ml)
+        const copqMonthly = [21116775, 16943203, 4151822, 2431160, 22379480, 12200508, 18114075, 18903115, 16944412, 8603310, 2003411, 16621788];
+
+        // ============================================================
+        // CHART 1: Production vs Defect (Combo)
+        // ============================================================
+        new Chart(document.getElementById('chartProdVsDefect'), {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Total Produksi',
+                        data: produksi,
+                        backgroundColor: 'rgba(59, 130, 246, 0.4)',
+                        borderColor: 'rgba(59, 130, 246, 0.8)',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        yAxisID: 'y',
+                        order: 2
+                    },
+                    {
+                        label: 'Total Cacat',
+                        data: cacat,
+                        type: 'line',
+                        borderColor: '#f43f5e',
+                        backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#f43f5e',
+                        pointBorderColor: '#0b1120',
+                        pointBorderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, font: { size: 11 } } },
+                    datalabels: { display: false }
+                },
+                scales: {
+                    y: {
+                        position: 'left',
+                        title: { display: true, text: 'Jumlah Botol', font: { size: 10 } },
+                        ticks: { font: { size: 9 }, callback: v => (v / 1000).toFixed(0) + 'K' },
+                        grid: { color: 'rgba(148,163,184,0.06)' }
+                    },
+                    x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+                }
+            }
+        });
+
+        // ============================================================
+        // CHART 2: Defect Pie (Doughnut)
+        // ============================================================
+        new Chart(document.getElementById('chartDefectPie'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Cacat Penyot', 'Cacat Leher Botol', 'Kebocoran', 'Preform Gagal', 'Cacat Lid'],
+                datasets: [{
+                    data: [25.69, 23.37, 18.72, 16.85, 15.37],
+                    backgroundColor: [
+                        'rgba(244, 63, 94, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(6, 182, 212, 0.8)',
+                        'rgba(16, 185, 129, 0.8)'
+                    ],
+                    borderColor: '#0b1120',
+                    borderWidth: 3,
+                    hoverOffset: 12
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '55%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, pointStyle: 'circle', padding: 14, font: { size: 13 } }
+                    },
+                    datalabels: {
+                        color: '#ffffff',
+                        font: { weight: 'bold', size: 15 },
+                        formatter: (value) => value.toFixed(1) + '%',
+                        anchor: 'center',
+                        align: 'center'
+                    }
+                }
+            }
+        });
+
+        // ============================================================
+        // CHART 3: Pareto Bar
+        // ============================================================
+        const defectNames = ['Cacat Penyot', 'Cacat Leher\nBotol', 'Kebocoran', 'Preform\nGagal', 'Cacat Lid'];
+        const defectCounts = [34107, 31026, 24851, 22370, 20402];
+        const defectColors = ['rgba(244, 63, 94, 0.75)', 'rgba(245, 158, 11, 0.75)', 'rgba(139, 92, 246, 0.75)', 'rgba(6, 182, 212, 0.75)', 'rgba(16, 185, 129, 0.75)'];
+        const cumPct = [];
+        let runningSum = 0;
+        const totalDefect = defectCounts.reduce((a, b) => a + b, 0);
+        defectCounts.forEach(c => { runningSum += c; cumPct.push((runningSum / totalDefect) * 100); });
+
+        new Chart(document.getElementById('chartParetoBar'), {
+            type: 'bar',
+            data: {
+                labels: defectNames,
+                datasets: [
+                    {
+                        label: 'Jumlah Cacat',
+                        data: defectCounts,
+                        backgroundColor: defectColors,
+                        borderColor: defectColors.map(c => c.replace('0.75', '1')),
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        yAxisID: 'y',
+                        order: 2
+                    },
+                    {
+                        label: 'Kumulatif %',
+                        data: cumPct,
+                        type: 'line',
+                        borderColor: '#fbbf24',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2.5,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#fbbf24',
+                        pointBorderColor: '#0b1120',
+                        pointBorderWidth: 2,
+                        tension: 0.3,
+                        yAxisID: 'y1',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, font: { size: 11 } } },
+                    datalabels: {
+                        display: function (ctx) { return ctx.datasetIndex === 0; },
+                        color: '#ffffff',
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', size: 9.5 },
+                        formatter: v => (v / 1000).toFixed(1) + 'K'
+                    }
+                },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Jumlah Cacat', font: { size: 10 } },
+                        ticks: { font: { size: 9 }, callback: v => (v / 1000).toFixed(0) + 'K' },
+                        grid: { color: 'rgba(148,163,184,0.06)' }
+                    },
+                    y1: {
+                        position: 'right',
+                        min: 0, max: 110,
+                        title: { display: true, text: 'Kumulatif %', font: { size: 10 } },
+                        ticks: { font: { size: 9 }, callback: v => v + '%' },
+                        grid: { drawOnChartArea: false }
+                    },
+                    x: { ticks: { font: { size: 9 }, maxRotation: 0 }, grid: { display: false } }
+                }
+            }
+        });
+
+        // ============================================================
+        // CHART 4: Defect Rate Line
+        // ============================================================
+        new Chart(document.getElementById('chartDefectRate'), {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: '% Cacat',
+                    data: pctCacat,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                    borderWidth: 2.5,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#f59e0b',
+                    pointBorderColor: '#0b1120',
+                    pointBorderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Batas (2%)',
+                    data: Array(12).fill(2.0),
+                    borderColor: 'rgba(244, 63, 94, 0.5)',
+                    borderWidth: 2,
+                    borderDash: [6, 4],
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, font: { size: 11 } } },
+                    datalabels: {
+                        display: function (ctx) { return ctx.datasetIndex === 0; },
+                        color: '#f59e0b',
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', size: 9 },
+                        formatter: v => v.toFixed(1) + '%'
+                    }
+                },
+                scales: {
+                    y: {
+                        title: { display: true, text: '% Cacat', font: { size: 10 } },
+                        ticks: { font: { size: 9 }, callback: v => v.toFixed(1) + '%' },
+                        grid: { color: 'rgba(148,163,184,0.06)' }
+                    },
+                    x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+                }
+            }
+        });
+
+        // ============================================================
+        // CHART: COPQ Priority Pie
+        // ============================================================
+        new Chart(document.getElementById('chartCOPQPriorityPie'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Cacat Penyot (Rp 24,1 Jt)', 'Cacat Leher Botol (Rp 21,9 Jt)', 'Cacat Kebocoran (Rp 17,6 Jt)'],
+                datasets: [{
+                    data: [24159005, 21976606, 17602708],
+                    backgroundColor: [
+                        'rgba(244, 63, 94, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(139, 92, 246, 0.8)'
+                    ],
+                    borderColor: '#0b1120',
+                    borderWidth: 3,
+                    hoverOffset: 12
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, pointStyle: 'circle', padding: 14, font: { size: 13 } }
+                    },
+                    datalabels: {
+                        color: '#ffffff',
+                        font: { weight: 'bold', size: 15 },
+                        formatter: (value, context) => {
+                            let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            let percent = ((value / total) * 100).toFixed(1);
+                            return percent + '%';
+                        },
+                        anchor: 'center',
+                        align: 'center'
+                    }
+                }
+            }
+        });
+
+        // ============================================================
+        // CHART 5: Total COPQ 2025 vs 2026
+        // ============================================================
+        new Chart(document.getElementById('chartTotalCOPQ'), {
+            type: 'bar',
+            data: {
+                labels: ['COPQ 2025 (Aktual)', 'Estimasi COPQ 2026'],
+                datasets: [
+                    {
+                        label: 'Total COPQ 3 Cacat Prioritas',
+                        data: [63738320, 44430125],
+                        backgroundColor: ['rgba(244, 63, 94, 0.8)', 'rgba(16, 185, 129, 0.8)'],
+                        borderColor: ['rgba(244, 63, 94, 1)', 'rgba(16, 185, 129, 1)'],
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        barPercentage: 0.5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#0f172a',
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', size: 12 },
+                        formatter: v => 'Rp ' + (v / 1000000).toFixed(1) + ' Juta'
+                    }
+                },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Rupiah (Rp)', font: { size: 11 } },
+                        ticks: { font: { size: 10 }, callback: v => 'Rp ' + (v / 1000000).toFixed(0) + ' Jt' },
+                        grid: { color: 'rgba(148,163,184,0.1)' },
+                        suggestedMax: 120000000
+                    },
+                    x: { ticks: { font: { size: 12, weight: 'bold' } }, grid: { display: false } }
+                }
+            }
+        });
+
+        // ============================================================
+        // SCROLL ANIMATION OBSERVER
+        // ============================================================
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+
+        document.querySelectorAll('.animate-in').forEach(el => {
+            el.style.animationPlayState = 'paused';
+            observer.observe(el);
+        });
+
+        // Auto-play animations that are already visible
+        setTimeout(() => {
+            document.querySelectorAll('.animate-in').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight) {
+                    el.style.animationPlayState = 'running';
+                }
+            });
+        }, 100);
+
+        console.log('✅ Dashboard Analisis Kualitas AMDK 600 ML — Ready');
+    </script>
+</body>
+
+</html>
